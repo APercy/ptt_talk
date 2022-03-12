@@ -57,12 +57,12 @@ if minetest.request_insecure_environment then
         insecure_environment.package.cpath = insecure_environment.package.cpath.. ";" .. "external/?.so"
         --overriding require to insecure require to allow modules to load dependencies
         local old_require = require
-        require = insecure_environment.require
+        --require = insecure_environment.require
 
         -- load namespace
         local socket = require_with_IE_env("socket")
         --reset changes
-        require = old_require
+        --require = old_require
         insecure_environment.package.path = old_path
         insecure_environment.package.cpath = old_cpath
 
