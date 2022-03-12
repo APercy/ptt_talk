@@ -1,8 +1,6 @@
-local port
 local server = nil
 local data, ip, port
 local wait_timer = 0
-local queue = {}
 
 modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
