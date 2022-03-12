@@ -56,7 +56,7 @@ if minetest.request_insecure_environment then
         insecure_environment.package.path = insecure_environment.package.path.. ";" .. "external/?.lua"
         insecure_environment.package.cpath = insecure_environment.package.cpath.. ";" .. "external/?.so"
         --overriding require to insecure require to allow modules to load dependencies
-        local old_require = require
+        --local old_require = require
         --require = insecure_environment.require
 
         -- load namespace
