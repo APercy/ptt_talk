@@ -109,24 +109,26 @@ minetest.register_globalstep(function(dtime)
                         local file = insecure_environment.io.open(file_path, "wb")
                         insecure_environment.io.output(file)
                         insecure_environment.io.write(data)
-                        insecure_environment.io.close(file)
+                        if file then
+                            insecure_environment.io.close(file)
 
-                        if minetest.dynamic_add_media then
-                            local media_options = {filepath = file_path, ephemeral = true}
-                            local media_to_play = filename:gsub("%.ogg", "")
-                            minetest.dynamic_add_media(media_options, function(name)
-                                    --minetest.chat_send_all(media_to_play)
-                                    minetest.sound_play(media_to_play, {
-                                        --to_player = nick,
-                                        object = player,
-                                        max_hear_distance = 30,
-                                        gain = 1.0,
-                                        fade = 0.0,
-                                        pitch = 1.0,
-                                    }, true)
-                                    insecure_environment.os.remove (file_path)
-                                end)
-                        end 
+                            if minetest.dynamic_add_media then
+                                local media_options = {filepath = file_path, ephemeral = true}
+                                local media_to_play = filename:gsub("%.ogg", "")
+                                minetest.dynamic_add_media(media_options, function(name)
+                                        --minetest.chat_send_all(media_to_play)
+                                        minetest.sound_play(media_to_play, {
+                                            --to_player = nick,
+                                            object = player,
+                                            max_hear_distance = 30,
+                                            gain = 1.0,
+                                            fade = 0.0,
+                                            pitch = 1.0,
+                                        }, true)
+                                        insecure_environment.os.remove (file_path)
+                                    end)
+                            end
+                        end
                     end
                 else
                     --minetest.chat_send_all("deu erro: " .. err)
