@@ -102,8 +102,8 @@ minetest.register_globalstep(function(dtime)
                         --receive file
                         local uid = make_unique_id(nick)
                         local filename = "ptt_" .. uid .. ".ogg"
-                        local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
-                        --local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
+                        --local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
+                        local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
                         local data, e = client:receive('*a')
 
                         local file = insecure_environment.io.open(file_path, "wb")

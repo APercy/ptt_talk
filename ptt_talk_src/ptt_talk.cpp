@@ -314,6 +314,7 @@ int64_t SendFile(int socket, const std::string& fileName, int chunkSize) {
     delete[] buffer;
 
     file.close();
+    //printf("Audio sent.");
 
     return errored ? -3 : fileSize;
 }
