@@ -64,6 +64,7 @@
 
 char *hostname;
 char *nick;
+bool capture_key = false;
 
 /*******************************************************************/
 int main(int argc, char **argv) {
@@ -137,13 +138,28 @@ int main(int argc, char **argv) {
             case FocusOut:
                 /*printf ("Process changed!\n");
                 printf ("Old Process is %d\n", (int)curFocus);*/
-                if (curFocus != root)
+                if (curFocus != root) {
                     XSelectInput(display, curFocus, 0);
+                }
                 XGetInputFocus (display, &curFocus, &revert);
                 //printf ("New Process is %d\n", (int)curFocus);
-                if (curFocus == PointerRoot)
+                if (curFocus == PointerRoot) {
                     curFocus = root;
+                }
                 XSelectInput(display, curFocus, KeyPressMask|KeyReleaseMask|FocusChangeMask);
+                if(1) {
+                    char *window_name = NULL;
+                    if(XFetchName(display, curFocus, &window_name) > 0) {
+                        std::string str_name = (std::string) window_name;
+                        if(str_name.find("Minetest")!=std::string::npos) {
+                            //printf ("É o Minetest!!!! %s\n", window_name);
+                            capture_key = true;
+                        } else {
+                            capture_key = false;
+                        }
+                        XFree(window_name);
+                    }
+                }
                 break;
             case KeyRelease:
                 len = XLookupString(&ev.xkey, buf, 16, &ks, &comp);
@@ -174,7 +190,7 @@ int main(int argc, char **argv) {
                 }*/
 
                 /* Record some audio. -------------------------------------------- */
-                if( ks == 65289 ) { //--- tab key
+                if( ks == 65289 && capture_key) { //--- tab key
                     printf ("Tab pressed!\n");
                     if( is_recording == false ) { //isn't recording
                         if(last_time >= 0.5) {
