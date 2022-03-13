@@ -108,14 +108,10 @@ minetest.register_globalstep(function(dtime)
                         local data, e = client:receive('*a')
                         client:close()
                         local file = insecure_environment.io.open(file_path, "wb")
-                        --local file = my_io.open(file_path, 'wb') -- write binary
                         --minetest.chat_send_all(dump(file))
                         if file then
                             file:write(data)
                             file:close()
-                            --[[insecure_environment.io.output(file)
-                            insecure_environment.io.write(data)
-                            insecure_environment.io.close(file)]]--
 
                             if minetest.dynamic_add_media then
                                 local media_options = {filepath = file_path, ephemeral = true}
@@ -129,6 +125,7 @@ minetest.register_globalstep(function(dtime)
                                             gain = 1.0,
                                             fade = 0.0,
                                             pitch = 1.0,
+                                            exclude_player = nick,
                                         }, true)
                                         insecure_environment.os.remove (file_path)
                                     end)
