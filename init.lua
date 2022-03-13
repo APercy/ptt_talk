@@ -1,7 +1,7 @@
 local server = nil
 local data, ip, port
 local wait_timer = 0
---local my_io = nil
+local play_flag = {}
 
 modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
@@ -118,16 +118,24 @@ minetest.register_globalstep(function(dtime)
                                 local media_to_play = filename:gsub("%.ogg", "")
                                 minetest.dynamic_add_media(media_options, function(name)
                                         --minetest.chat_send_all(media_to_play)
-                                        minetest.sound_play(media_to_play, {
-                                            --to_player = nick,
-                                            object = player,
-                                            max_hear_distance = 30,
-                                            gain = 1.0,
-                                            fade = 0.0,
-                                            pitch = 1.0,
-                                            exclude_player = nick,
-                                        }, true)
-                                        insecure_environment.os.remove (file_path)
+                                        if play_flag[media_to_play] == true then
+                                            --do nothing
+                                        else
+                                            play_flag[media_to_play] = true
+                                            minetest.sound_play(media_to_play, {
+                                                --to_player = nick,
+                                                object = player,
+                                                max_hear_distance = 30,
+                                                gain = 1.0,
+                                                fade = 0.0,
+                                                pitch = 1.0,
+                                                --exclude_player = nick,
+                                            }, true)
+                                            insecure_environment.os.remove (file_path)
+                                            minetest.after(20, function()
+                                                play_flag[media_to_play] = nil
+                                            end)
+                                        end
                                     end)
                             end
                         end
