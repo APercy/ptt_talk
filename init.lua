@@ -2,6 +2,11 @@ local server = nil
 local data, ip, port
 local wait_timer = 0
 
+local queue = {}
+local talk_form = "formspec_version[5]"..
+    "size[1.5,1]"..
+    "button[0.125,0.125;1.25,0.75;play;Talk]"
+
 modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
 
@@ -117,15 +122,8 @@ minetest.register_globalstep(function(dtime)
                                 local media_to_play = filename:gsub("%.ogg", "")
                                 minetest.dynamic_add_media(media_options, function(name)
                                     --minetest.chat_send_all(media_to_play)
-                                    minetest.sound_play(media_to_play, {
-                                        --to_player = nick,
-                                        object = player,
-                                        max_hear_distance = 30,
-                                        gain = 1.0,
-                                        fade = 0.0,
-                                        pitch = 1.0,
-                                        --exclude_player = nick,
-                                    }, true)
+                                    queue[nick] = media_to_play
+                                    minetest.show_formspec(nick, "ptt_talk:talk", talk_form)
                                     insecure_environment.os.remove (file_path)
                                 end)
                             end
@@ -144,5 +142,21 @@ minetest.register_globalstep(function(dtime)
     end
 end)
 
-
-
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+    local form_name = "ptt_talk:talk"
+    local name = player:get_player_name()
+	if formname == form_name then
+        if fields.play then
+            minetest.sound_play(queue[name], {
+                --to_player = nick,
+                object = player,
+                max_hear_distance = 30,
+                gain = 1.0,
+                fade = 0.0,
+                pitch = 1.0,
+                --exclude_player = nick,
+            }, true)
+        end
+        minetest.close_formspec(name, form_name)
+    end
+end)
