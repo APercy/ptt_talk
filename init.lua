@@ -88,6 +88,7 @@ minetest.register_globalstep(function(dtime)
             -- wait for a connection from any client
             local client = server:accept()
             if client then
+                --minetest.chat_send_all("client okay");
                 -- make sure we don't block waiting for this client's line
                 --client:settimeout(10)
                 -- receive the line
@@ -105,9 +106,10 @@ minetest.register_globalstep(function(dtime)
                         --local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
                         local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
                         local data, e = client:receive('*a')
-
+                        client:close()
                         local file = insecure_environment.io.open(file_path, "wb")
                         --local file = my_io.open(file_path, 'wb') -- write binary
+                        --minetest.chat_send_all(dump(file))
                         if file then
                             file:write(data)
                             file:close()

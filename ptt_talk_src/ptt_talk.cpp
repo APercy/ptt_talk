@@ -126,6 +126,7 @@ int main(int argc, char **argv) {
 
     float last_time = 0.0;
     float sleep_time = 0.3;
+    initialize(&inputParameters, stream, err, &data, &numSamples, &numBytes, &totalFrames, &should_stop);
     while (1)
     {
         sleep(sleep_time);
@@ -207,29 +208,42 @@ int main(int argc, char **argv) {
 }
 
 int sendMessage(char* file_path) {
-    int sockfd, portno, n;
+    int sockfd, portno, n = 0;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[256];
 
     portno = 41000;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-        printf("ERROR opening socket");
+
+    sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sockfd < 0) {
+        printf("ERROR opening socket\n");
+        exit(0);
+    }
+
     server = gethostbyname(hostname);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
     }
-    //printf("socket openned\n");
+
+    //printf("socket openned");
     bzero((char *) &serv_addr, sizeof(serv_addr));
+
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
+    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+
     serv_addr.sin_port = htons(portno);
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-         printf("ERROR connecting");
+
+    //printf("ok here\n");
+    int con_result = connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr));
+    if (con_result < 0) {
+        printf("ERROR connecting %d\n", con_result);
+        exit(1);
+    }
+    //printf("ok here too\n");
+
+
 
     bzero(buffer,256);
     strncpy(buffer, nick, sizeof(buffer));
@@ -246,6 +260,7 @@ int sendMessage(char* file_path) {
     //printf("Socket return %s\n",buffer);
     std::string str_buffer = (std::string) buffer;
     if(str_buffer == (std::string) "file\n") {
+        //printf("Lets's send file\n");
         //TODO mandar arquivo
         int64_t rc = SendFile(sockfd, "recorded.ogg");
         if (rc < 0) {
@@ -287,7 +302,7 @@ long GetFileSize(std::string filename)
 int64_t SendFile(int socket, const std::string& fileName, int chunkSize) {
 
     const int64_t fileSize = GetFileSize(fileName);
-    //printf("File size: %ld\n", fileSize);
+    printf("File size: %ld\n", fileSize);
     if (fileSize < 0) { return -1; }
 
     std::ifstream file(fileName, std::ifstream::binary);
@@ -311,10 +326,11 @@ int64_t SendFile(int socket, const std::string& fileName, int chunkSize) {
         }
         i -= l;
     }
+    close(socket);
     delete[] buffer;
 
     file.close();
-    //printf("Audio sent.");
+    printf("Audio sent.");
 
     return errored ? -3 : fileSize;
 }
