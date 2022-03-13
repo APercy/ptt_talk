@@ -1,6 +1,7 @@
 local server = nil
 local data, ip, port
 local wait_timer = 0
+--local my_io = nil
 
 modname = minetest.get_current_modname()
 modpath = minetest.get_modpath(modname)
@@ -69,6 +70,7 @@ if minetest.request_insecure_environment then
         server:settimeout(0)
         -- find out which port the OS chose for us
         ip, port = server:getsockname()
+        --my_io = insecure_environment.io
     end
 end
 
@@ -105,10 +107,13 @@ minetest.register_globalstep(function(dtime)
                         local data, e = client:receive('*a')
 
                         local file = insecure_environment.io.open(file_path, "wb")
-                        insecure_environment.io.output(file)
-                        insecure_environment.io.write(data)
+                        --local file = my_io.open(file_path, 'wb') -- write binary
                         if file then
-                            insecure_environment.io.close(file)
+                            file:write(data)
+                            file:close()
+                            --[[insecure_environment.io.output(file)
+                            insecure_environment.io.write(data)
+                            insecure_environment.io.close(file)]]--
 
                             if minetest.dynamic_add_media then
                                 local media_options = {filepath = file_path, ephemeral = true}
