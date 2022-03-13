@@ -55,12 +55,13 @@
 #include<X11/X.h>
 #include<X11/Xlib.h>
 #include<X11/Xutil.h>
-#include <unistd.h>
+#include <unistd.h> //for sleep
 #include <thread>
 
 #include "portaudio.h"
 #include "ptt_talk.h"
 #include "audio_rec_play.h"
+#include "sine.h"
 
 char *hostname;
 char *nick;
@@ -195,6 +196,7 @@ int main(int argc, char **argv) {
                     if( is_recording == false ) { //isn't recording
                         if(last_time >= 0.5) {
                             last_time = 0.0;
+                            play_sine();
                             printf(">>> starting\n");
                             is_recording = true; //so start the record
                             should_stop = false;
