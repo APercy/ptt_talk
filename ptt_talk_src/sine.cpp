@@ -77,7 +77,7 @@ static int patestCallback(const void*                     inputBuffer,
 {
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
-    const float volumeMultiplier = 0.05f;
+    const float volumeMultiplier = 0.2f;
     unsigned int i;
     (void) inputBuffer; /* Prevent unused argument warning. */
     for( i=0; i<framesPerBuffer; i++ )
