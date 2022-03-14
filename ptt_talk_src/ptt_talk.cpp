@@ -191,8 +191,8 @@ int main(int argc, char **argv) {
                 }*/
 
                 /* Record some audio. -------------------------------------------- */
-                if( ks == 65289 && capture_key) { //--- tab key
-                    printf ("Tab pressed!\n");
+                if( ks == 65513 && capture_key) { //--- tab key
+                    printf ("Alt pressed!\n");
                     if( is_recording == false ) { //isn't recording
                         if(last_time >= 0.5) {
                             last_time = 0.0;
