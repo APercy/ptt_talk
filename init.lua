@@ -160,7 +160,9 @@ end)
 minetest.register_on_player_receive_fields(function(player, formname, fields)
     local form_name = "ptt_talk:talk"
     local name = player:get_player_name()
-    player:set_nametag_attributes(nametags[name])
+    if nametags[name] then
+        player:set_nametag_attributes(nametags[name])
+    end
 	if formname == form_name then
         if fields.play then
             minetest.sound_play(queue[name], {
