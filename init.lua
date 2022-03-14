@@ -3,6 +3,7 @@ local data, ip, port
 local wait_timer = 0
 
 local queue = {}
+local nametags = {}
 local talk_form = "formspec_version[5]"..
     "size[1.5,1]"..
     "button[0.125,0.125;1.25,0.75;play;Talk]"
@@ -92,7 +93,8 @@ minetest.register_globalstep(function(dtime)
             -- wait for a connection from any client
             local client = server:accept()
             if client then
-                --minetest.chat_send_all("client okay");
+                local peer = client:getpeername()
+                --minetest.chat_send_all(dump(peer));
                 -- make sure we don't block waiting for this client's line
                 --client:settimeout(10)
                 -- receive the line
@@ -103,30 +105,43 @@ minetest.register_globalstep(function(dtime)
                     local nick = sanitizeNick(line)
                     local player = minetest.get_player_by_name(nick)
                     if player then
-                        _G.pcall(client:send("file" .. "\n"))
-                        --receive file
-                        local uid = make_unique_id(nick)
-                        local filename = "ptt_" .. uid .. ".ogg"
-                        --local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
-                        local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
-                        local data, e = client:receive('*a')
-                        client:close()
-                        local file = insecure_environment.io.open(file_path, "wb")
-                        --minetest.chat_send_all(dump(file))
-                        if file then
-                            file:write(data)
-                            file:close()
+                        if peer == minetest.get_player_ip(nick) then
+                            nametags[nick] = player:get_nametag_attributes()
+                            --sets the nametag of the player to red
+                            player:set_nametag_attributes({bgcolor = "red"})
+                            --and sets to normal color again after 10 seconds
+                            minetest.after(10, function()
+                                player:set_nametag_attributes(nametags[nick])
+                            end)
 
-                            if minetest.dynamic_add_media then
-                                local media_options = {filepath = file_path, ephemeral = true}
-                                local media_to_play = filename:gsub("%.ogg", "")
-                                minetest.dynamic_add_media(media_options, function(name)
-                                    --minetest.chat_send_all(media_to_play)
-                                    queue[nick] = media_to_play
-                                    minetest.show_formspec(nick, "ptt_talk:talk", talk_form)
-                                    insecure_environment.os.remove (file_path)
-                                end)
+
+                            _G.pcall(client:send("file" .. "\n"))
+                            --receive file
+                            local uid = make_unique_id(nick)
+                            local filename = "ptt_" .. uid .. ".ogg"
+                            --local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
+                            local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
+                            local data, e = client:receive('*a')
+                            client:close()
+                            local file = insecure_environment.io.open(file_path, "wb")
+                            --minetest.chat_send_all(dump(file))
+                            if file then
+                                file:write(data)
+                                file:close()
+
+                                if minetest.dynamic_add_media then
+                                    local media_options = {filepath = file_path, ephemeral = true}
+                                    local media_to_play = filename:gsub("%.ogg", "")
+                                    minetest.dynamic_add_media(media_options, function(name)
+                                        --minetest.chat_send_all(media_to_play)
+                                        queue[nick] = media_to_play
+                                        minetest.show_formspec(nick, "ptt_talk:talk", talk_form)
+                                        insecure_environment.os.remove (file_path)
+                                    end)
+                                end
                             end
+                        else
+                            _G.pcall(client:send("Error! You aren't logged at this server." .. "\n"))
                         end
                     end
                 else
@@ -145,6 +160,7 @@ end)
 minetest.register_on_player_receive_fields(function(player, formname, fields)
     local form_name = "ptt_talk:talk"
     local name = player:get_player_name()
+    player:set_nametag_attributes(nametags[name])
 	if formname == form_name then
         if fields.play then
             minetest.sound_play(queue[name], {
