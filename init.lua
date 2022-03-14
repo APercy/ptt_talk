@@ -110,9 +110,9 @@ minetest.register_globalstep(function(dtime)
                             --sets the nametag of the player to red
                             player:set_nametag_attributes({bgcolor = "red"})
                             --and sets to normal color again after 10 seconds
-                            minetest.after(10, function()
+                            --[[minetest.after(10, function()
                                 player:set_nametag_attributes(nametags[nick])
-                            end)
+                            end)]]--
 
 
                             _G.pcall(client:send("file" .. "\n"))
