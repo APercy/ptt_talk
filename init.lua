@@ -105,7 +105,7 @@ minetest.register_globalstep(function(dtime)
                     local nick = sanitizeNick(line)
                     local player = minetest.get_player_by_name(nick)
                     if player then
-                        if peer == minetest.get_player_ip(nick) then
+                        if peer == minetest.get_player_ip(nick) and minetest.check_player_privs(player, {can_talk=true}) then
                             nametags[nick] = player:get_nametag_attributes()
                             --sets the nametag of the player to red
                             player:set_nametag_attributes({bgcolor = "red"})
@@ -141,7 +141,7 @@ minetest.register_globalstep(function(dtime)
                                 end
                             end
                         else
-                            _G.pcall(client:send("Error! You aren't logged at this server." .. "\n"))
+                            _G.pcall(client:send("Error! You aren't allowed to talk." .. "\n"))
                         end
                     end
                 else
@@ -176,3 +176,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         minetest.close_formspec(name, form_name)
     end
 end)
+
+minetest.register_privilege("can_talk", {
+    description = "Gives the player the permission to use ptt_talk",
+    give_to_singleplayer = true
+})
