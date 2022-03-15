@@ -42,8 +42,9 @@
 
 
 #ifdef _WIN32
-	#include <windows.h>
     #include <winsock2.h>
+	#include <windows.h>
+    #include "mingw.thread.h"
 #else
     #include <sys/socket.h>
     #include <netinet/in.h>
@@ -104,6 +105,50 @@ int main(int argc, char **argv) {
 
     printf("ptt_talk.cpp\n"); fflush(stdout);
  
+    float last_time = 0.0;
+    float sleep_time = 0.3;
+
+    #ifdef _WIN32
+    SHORT keyState = GetKeyState(VK_CAPITAL/*(caps lock)*/);
+    bool isToggled = keyState & 1;
+    bool isDown = keyState & 0x8000;
+    initialize(&inputParameters, stream, err, &data, &numSamples, &numBytes, &totalFrames, &should_stop);
+    while (1) {
+        Sleep(sleep_time);
+
+        keyState = GetAsyncKeyState(VK_MENU) & 0x8000;
+
+        /* Record some audio. -------------------------------------------- */
+        if( keyState && capture_key) { //--- tab key
+            printf ("Alt pressed!\n");
+            if( is_recording == false ) { //isn't recording
+                if(last_time >= 0.5) {
+                    last_time = 0.0;
+                    play_sine();
+                    printf(">>> starting\n");
+                    is_recording = true; //so start the record
+                    should_stop = false;
+                    initialize(&inputParameters, stream, err, &data, &numSamples, &numBytes, &totalFrames, &should_stop);
+                    //recordAudio(inputParameters, stream, err, data, numSamples, &should_stop, &is_recording);
+                    std::thread thread(recordAudio, inputParameters, stream, err, data, numSamples, &should_stop, &is_recording);
+                    thread.detach();
+                }
+            } else {
+                if (should_stop == false && is_recording == true) {
+                    if(last_time >= 0.5) {
+                        last_time = 0.0;
+                        printf(">>> stopping\n");
+                        should_stop = true;
+                    }
+                }
+            }
+        }
+
+    }
+
+    #else
+
+    //linux
     /* ------------------- set key event ------------------- */
     Display* display = XOpenDisplay(NULL);
     if(display == NULL) {
@@ -122,7 +167,7 @@ int main(int argc, char **argv) {
     XComposeStatus comp;
     int len;
     int revert;
-
+    
     unsigned int keycode = XKeysymToKeycode(display, XK_Tab);
     XGetInputFocus (display, &curFocus, &revert);
     XSelectInput(display, window, KeyPressMask|KeyReleaseMask|FocusChangeMask);
@@ -132,12 +177,11 @@ int main(int argc, char **argv) {
     XEvent ev;
     /* ------------------- end key event ------------------- */
 
-    float last_time = 0.0;
-    float sleep_time = 0.3;
     initialize(&inputParameters, stream, err, &data, &numSamples, &numBytes, &totalFrames, &should_stop);
     while (1)
     {
         sleep(sleep_time);
+        
         last_time += sleep_time;
         if(last_time > 0.5) last_time = 0.5;
         XNextEvent(display, &ev);
@@ -215,6 +259,7 @@ int main(int argc, char **argv) {
         } //end switch
 
     } //end while
+    #endif
 }
 
 int sendMessage(char* file_path) {
@@ -238,12 +283,11 @@ int sendMessage(char* file_path) {
     }
 
     //printf("socket openned");
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-
     serv_addr.sin_port = htons(portno);
+    memmove((char *)&serv_addr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
 
     //printf("ok here\n");
     int con_result = connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr));
@@ -254,8 +298,7 @@ int sendMessage(char* file_path) {
     //printf("ok here too\n");
 
 
-
-    bzero(buffer,256);
+    memset((char*) buffer, 0, sizeof(buffer));
     strncpy(buffer, nick, sizeof(buffer));
     strncat(buffer, (const char*)"\n", sizeof(buffer - 1));
     //n = send(sockfd , buffer , strlen(nick) , 0 );
@@ -263,7 +306,7 @@ int sendMessage(char* file_path) {
     //printf ("return write %d\n", (int)n);
     if (n < 0) 
          printf("ERROR writing to socket");
-    bzero(buffer,256);
+    memset((char*) buffer, 0, sizeof(buffer));
     n = read(sockfd,buffer,255);
     if (n < 0) 
          printf("ERROR reading from socket");
@@ -271,7 +314,6 @@ int sendMessage(char* file_path) {
     std::string str_buffer = (std::string) buffer;
     if(str_buffer == (std::string) "file\n") {
         //printf("Lets's send file\n");
-        //TODO mandar arquivo
         int64_t rc = SendFile(sockfd, "recorded.ogg");
         if (rc < 0) {
             printf("Failed to send file: %ld\n", rc);
