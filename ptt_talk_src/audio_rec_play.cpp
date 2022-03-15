@@ -65,11 +65,6 @@ int done(paTestData * data, PaError err) {
 
 static void encodeOgg (SAMPLE * recordedSamples, int size )
 {
-
-    SNDFILE        *infile, *outfile;
-    SF_INFO        sfinfo,sf_in;
-    int            readcount;
-
     //converting to mono
     SAMPLE * audioOut = new SAMPLE[size/2];
     for(int i = 0; i < size/2; i++)
@@ -80,6 +75,9 @@ static void encodeOgg (SAMPLE * recordedSamples, int size )
         audioOut[i] /= NUM_CHANNELS;
     }
     //ending conversion
+
+    SNDFILE        *outfile;
+    SF_INFO        sfinfo,sf_in;
 
     fflush (stdout);
     sfinfo.samplerate=SAMPLE_RATE;
@@ -266,7 +264,7 @@ int recordAudio(PaStreamParameters  inputParameters,
 
     encodeOgg (data.recordedSamples, (data.frameIndex*NUM_CHANNELS) );
 
-    sendMessage("recorded.ogg");
+    sendMessage((char*)"recorded.ogg");
 
     *is_recording = false;
 

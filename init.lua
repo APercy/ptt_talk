@@ -165,6 +165,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     end
 	if formname == form_name then
         if fields.play then
+            minetest.log("action", name .. " used voice chat")
             minetest.sound_play(queue[name], {
                 --to_player = nick,
                 object = player,

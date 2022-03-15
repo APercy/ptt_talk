@@ -41,6 +41,10 @@
  * license above.
  */
 
+#ifdef _WIN32
+	#include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <thread>
@@ -138,7 +142,11 @@ int play_sine(void)
     if( err != paNoError ){
         goto error;
     } else {
+        #ifdef _WIN32
+        Sleep(300);
+        #else
         std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        #endif
     }
 
     err = Pa_CloseStream( stream );

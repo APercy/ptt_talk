@@ -41,22 +41,28 @@
  */
 
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/mman.h>
-#include <fcntl.h> /* For O_* constants */
+#ifdef _WIN32
+	#include <windows.h>
+    #include <winsock2.h>
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <netdb.h>
+	#include <sys/mman.h>
+	#include <fcntl.h> /* For O_* constants */
+
+    #include<X11/X.h>
+    #include<X11/Xlib.h>
+    #include<X11/Xutil.h>
+    #include <unistd.h> //for sleep
+    #include <thread>
+#endif // _WIN32
+
 #include <strings.h>
 #include <string.h>
 
 #include <sys/stat.h>
 #include <fstream>
-
-#include<X11/X.h>
-#include<X11/Xlib.h>
-#include<X11/Xutil.h>
-#include <unistd.h> //for sleep
-#include <thread>
 
 #include "portaudio.h"
 #include "ptt_talk.h"
@@ -162,20 +168,6 @@ int main(int argc, char **argv) {
                     }
                 }
                 break;
-            case KeyRelease:
-                len = XLookupString(&ev.xkey, buf, 16, &ks, &comp);
-                /*printf ("Released key!\n");
-                len = XLookupString(&ev.xkey, buf, 16, &ks, &comp);
-                if (len > 0 && isprint(buf[0]))
-                {
-                    buf[len]=0;
-                    printf("String is: %s\n", buf);
-                }
-                else
-                {
-                    printf ("Key is: %d\n", (int)ks);
-                }*/
-                break;
             case KeyPress:
                 len = XLookupString(&ev.xkey, buf, 16, &ks, &comp);
                 /*printf ("Got key!\n");
@@ -265,7 +257,7 @@ int sendMessage(char* file_path) {
 
     bzero(buffer,256);
     strncpy(buffer, nick, sizeof(buffer));
-    strncat(buffer, "\n", sizeof(buffer));
+    strncat(buffer, (const char*)"\n", sizeof(buffer - 1));
     //n = send(sockfd , buffer , strlen(nick) , 0 );
     n = write(sockfd,buffer,strlen(buffer));
     //printf ("return write %d\n", (int)n);
