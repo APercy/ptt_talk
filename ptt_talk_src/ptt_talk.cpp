@@ -44,7 +44,7 @@
 #ifdef _WIN32
     #include <winsock2.h>
 	#include <windows.h>
-    #include "mingw.thread.h"
+    #include "mingw_tread/mingw.thread.h"
 #else
     #include <sys/socket.h>
     #include <netinet/in.h>
@@ -55,9 +55,10 @@
     #include<X11/X.h>
     #include<X11/Xlib.h>
     #include<X11/Xutil.h>
-    #include <unistd.h> //for sleep
     #include <thread>
 #endif // _WIN32
+
+#include <unistd.h> //for sleep, read, write
 
 #include <strings.h>
 #include <string.h>
@@ -104,7 +105,7 @@ int main(int argc, char **argv) {
     bool                is_recording = false;
 
     printf("ptt_talk.cpp\n"); fflush(stdout);
- 
+
     float last_time = 0.0;
     float sleep_time = 0.3;
 
@@ -113,14 +114,19 @@ int main(int argc, char **argv) {
     bool isToggled = keyState & 1;
     bool isDown = keyState & 0x8000;
     initialize(&inputParameters, stream, err, &data, &numSamples, &numBytes, &totalFrames, &should_stop);
+    capture_key = true;
     while (1) {
         Sleep(sleep_time);
 
+        last_time += sleep_time;
+        if(last_time > 0.5) last_time = 0.5;
+
         keyState = GetAsyncKeyState(VK_MENU) & 0x8000;
+        //printf("%d\n", keyState);
 
         /* Record some audio. -------------------------------------------- */
-        if( keyState && capture_key) { //--- tab key
-            printf ("Alt pressed!\n");
+        if( keyState == -32768 && capture_key) { //--- ALT key
+            //printf ("Alt pressed!\n");
             if( is_recording == false ) { //isn't recording
                 if(last_time >= 0.5) {
                     last_time = 0.0;
@@ -167,7 +173,7 @@ int main(int argc, char **argv) {
     XComposeStatus comp;
     int len;
     int revert;
-    
+
     unsigned int keycode = XKeysymToKeycode(display, XK_Tab);
     XGetInputFocus (display, &curFocus, &revert);
     XSelectInput(display, window, KeyPressMask|KeyReleaseMask|FocusChangeMask);
@@ -181,7 +187,7 @@ int main(int argc, char **argv) {
     while (1)
     {
         sleep(sleep_time);
-        
+
         last_time += sleep_time;
         if(last_time > 0.5) last_time = 0.5;
         XNextEvent(display, &ev);
@@ -203,7 +209,7 @@ int main(int argc, char **argv) {
                     if(XFetchName(display, curFocus, &window_name) > 0) {
                         std::string str_name = (std::string) window_name;
                         if(str_name.find("Minetest")!=std::string::npos) {
-                            //printf ("Ã‰ o Minetest!!!! %s\n", window_name);
+                            //printf ("É o Minetest!!!! %s\n", window_name);
                             capture_key = true;
                         } else {
                             capture_key = false;
@@ -227,7 +233,7 @@ int main(int argc, char **argv) {
                 }*/
 
                 /* Record some audio. -------------------------------------------- */
-                if( ks == 65513 && capture_key) { //--- tab key
+                if( ks == 65513 && capture_key) { //--- ALT key
                     printf ("Alt pressed!\n");
                     if( is_recording == false ) { //isn't recording
                         if(last_time >= 0.5) {
@@ -304,11 +310,11 @@ int sendMessage(char* file_path) {
     //n = send(sockfd , buffer , strlen(nick) , 0 );
     n = write(sockfd,buffer,strlen(buffer));
     //printf ("return write %d\n", (int)n);
-    if (n < 0) 
+    if (n < 0)
          printf("ERROR writing to socket");
     memset((char*) buffer, 0, sizeof(buffer));
     n = read(sockfd,buffer,255);
-    if (n < 0) 
+    if (n < 0)
          printf("ERROR reading from socket");
     //printf("Socket return %s\n",buffer);
     std::string str_buffer = (std::string) buffer;

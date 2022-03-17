@@ -1,0 +1,1 @@
+g++ ptt_talk.cpp audio_rec_play.cpp sine.cpp -D_WIN32_WINNT=0x0501 -static-libgcc -static-libstdc++ -I../libsnd/include -L../libsnd/lib -I../portaudio/include -L../portaudio/lib -L../portaudio/lib/.libs -lportaudio -lsndfile -lws2_32 -lm -o win_version/ptttalk.exe
