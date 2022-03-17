@@ -72,7 +72,12 @@ static void encodeOgg (SAMPLE * recordedSamples, int size )
         audioOut[i] = 0;
         for(int j = 0; j < NUM_CHANNELS; j++)
             audioOut[i] += recordedSamples[(i*NUM_CHANNELS) + j];
+
+        #ifdef _WIN32
+        //do nothing
+        #else
         audioOut[i] /= NUM_CHANNELS;
+        #endif
     }
     //ending conversion
 
@@ -88,6 +93,7 @@ static void encodeOgg (SAMPLE * recordedSamples, int size )
         std::cout << "Error : could not open output file" << std::endl;
         exit (1);
     }
+    std::cout << "File succefully recorded" << std::endl;
 
     //sf_write_short (outfile, recordedSamples, size);
     sf_write_float(outfile, audioOut, size/2);

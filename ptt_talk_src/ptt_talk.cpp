@@ -268,6 +268,133 @@ int main(int argc, char **argv) {
     #endif
 }
 
+#ifdef _WIN32
+int sendMessage(char* filepath) {
+    WSADATA              wsaData;
+    SOCKET               SendingSocket;
+    // Server/receiver address
+    SOCKADDR_IN          ServerAddr, ThisSenderInfo;
+    // Server/receiver port to connect to
+    unsigned int         Port = 41000;
+    int  RetCode;
+
+    // Be careful with the array bound, provide some checking mechanism...
+    char sendbuf[256];
+    int BytesSent, nlen;
+
+    // Initialize Winsock version 2.2
+    WSAStartup(MAKEWORD(2,2), &wsaData);
+    printf("Client: Winsock DLL status is %s.\n", wsaData.szSystemStatus);
+
+    // Create a new socket to make a client connection.
+    // AF_INET = 2, The Internet Protocol version 4 (IPv4) address family, TCP protocol
+    SendingSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(SendingSocket == INVALID_SOCKET)
+    {
+        printf("Client: socket() failed! Error code: %ld\n", WSAGetLastError());
+        // Do the clean up
+        WSACleanup();
+        // Exit with error
+        return -1;
+    }
+    else
+      printf("Client: socket() is OK!\n"); 
+
+    // Set up a SOCKADDR_IN structure that will be used to connect
+    // to a listening server on port 41000
+    // IPv4
+    ServerAddr.sin_family = AF_INET;
+    // Port no.
+    ServerAddr.sin_port = htons(Port);
+    // The IP address
+    ServerAddr.sin_addr.s_addr = inet_addr(hostname);
+
+    // Make a connection to the server with socket SendingSocket.
+    RetCode = connect(SendingSocket, (SOCKADDR *) &ServerAddr, sizeof(ServerAddr));
+    if(RetCode != 0)
+    {
+        printf("Client: connect() failed! Error code: %ld\n", WSAGetLastError());
+        // Close the socket
+        closesocket(SendingSocket);
+        // Do the clean up
+        WSACleanup();
+        // Exit with error
+        return -1;
+    }
+    else
+    {
+        printf("Client: connect() is OK, got connected...\n");
+        printf("Client: Ready for sending and/or receiving data...\n");
+    }
+
+    // At this point you can start sending or receiving data on
+    // the socket SendingSocket.
+    // Some info on the receiver side...
+    getsockname(SendingSocket, (SOCKADDR *)&ServerAddr, (int *)sizeof(ServerAddr));
+    printf("Client: Receiver IP(s) used: %s\n", inet_ntoa(ServerAddr.sin_addr));
+    printf("Client: Receiver port used: %d\n", htons(ServerAddr.sin_port));
+
+     // Sends some data to server/receiver...
+    memset((char*) sendbuf, 0, sizeof(sendbuf));
+    strncpy(sendbuf, nick, sizeof(sendbuf));
+    strncat(sendbuf, (const char*)"\n", sizeof(sendbuf - 1));
+    BytesSent = send(SendingSocket, sendbuf, strlen(sendbuf), 0);
+
+    if(BytesSent == SOCKET_ERROR)
+        printf("Client: send() error %ld.\n", WSAGetLastError());
+    else
+    {
+        printf("Client: send() is OK - bytes sent: %ld\n", BytesSent);
+        // Some info on this sender side...
+        // Allocate the required resources
+        memset(&ThisSenderInfo, 0, sizeof(ThisSenderInfo));
+        nlen = sizeof(ThisSenderInfo);
+
+        getsockname(SendingSocket, (SOCKADDR *)&ThisSenderInfo, &nlen);
+        printf("Client: Sender IP(s) used: %s\n", inet_ntoa(ThisSenderInfo.sin_addr));
+        printf("Client: Sender port used: %d\n", htons(ThisSenderInfo.sin_port));
+        printf("Client: Those bytes represent: \"%s\"\n", sendbuf);
+
+        memset((char*) sendbuf, 0, sizeof(sendbuf));
+        //Receive a reply from the server
+        if((nlen = recv(SendingSocket, sendbuf, sizeof(sendbuf)-1 , 0)) == SOCKET_ERROR)
+        {
+	        printf("ERROR reading from socket\n");
+            return -1;
+        }
+        printf("Now sending the file\n");
+        //printf("Socket return %s\n",buffer);
+        std::string str_buffer = (std::string) sendbuf;
+        if(str_buffer == (std::string) "file\n") {
+            //printf("Lets's send file\n");
+            int64_t rc = SendFile(SendingSocket, "recorded.ogg");
+            if (rc < 0) {
+                printf("Failed to send file: %ld\n", rc);
+            }
+        }
+    }
+
+    if( shutdown(SendingSocket, SD_SEND) != 0)
+        printf("Client: Well, there is something wrong with the shutdown(). The error code: %ld\n", WSAGetLastError());
+    else
+        printf("Client: shutdown() looks OK...\n");
+
+    // When you are finished sending and receiving data on socket SendingSocket,
+    // close the socket using the closesocket API.
+    if(closesocket(SendingSocket) != 0)
+        printf("Client: Cannot close \"SendingSocket\" socket. Error code: %ld\n", WSAGetLastError());
+    else
+        printf("Client: Closing \"SendingSocket\" socket...\n");
+
+    // When your application is finished handling the connection, call WSACleanup.
+    if(WSACleanup() != 0)
+        printf("Client: WSACleanup() failed!...\n");
+    else
+        printf("Client: WSACleanup() is OK...\n");
+
+    return 0;
+}
+#else
 int sendMessage(char* file_path) {
     int sockfd, portno, n = 0;
     struct sockaddr_in serv_addr;
@@ -288,7 +415,7 @@ int sendMessage(char* file_path) {
         exit(0);
     }
 
-    //printf("socket openned");
+    printf("socket openned\n");
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
@@ -328,6 +455,7 @@ int sendMessage(char* file_path) {
     close(sockfd);
     return 0;
 }
+#endif
 
 ///
 /// Sends data in buffer until bufferSize value is met
