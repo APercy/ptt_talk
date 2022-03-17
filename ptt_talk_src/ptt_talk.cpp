@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
         last_time += sleep_time;
         if(last_time > 0.5) last_time = 0.5;
 
-        keyState = GetAsyncKeyState(VK_MENU) & 0x8000;
-        //printf("%d\n", keyState);
+        keyState = GetAsyncKeyState(VK_MENU);
+		if(keyState != 0 && keyState != -32768) printf("%d\n", keyState);
 
         /* Record some audio. -------------------------------------------- */
         if( keyState == -32768 && capture_key) { //--- ALT key
