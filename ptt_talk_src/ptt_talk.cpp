@@ -84,7 +84,11 @@ int main(int argc, char **argv) {
 
     /* check command line arguments */
     if (argc != 3) {
-       fprintf(stderr,"usage: %s <hostname> <nick>\n", argv[0]);
+       #ifdef _WIN32
+       fprintf(stderr,"usage: %s <server IP addresss> <nick>\n", argv[0]);
+       #else
+       fprintf(stderr,"usage: %s <server host name> <nick>\n", argv[0]);
+       #endif // _WIN32
        exit(0);
     }
     hostname = argv[1];
@@ -298,7 +302,7 @@ int sendMessage(char* filepath) {
         return -1;
     }
     else
-      printf("Client: socket() is OK!\n"); 
+      printf("Client: socket() is OK!\n");
 
     // Set up a SOCKADDR_IN structure that will be used to connect
     // to a listening server on port 41000

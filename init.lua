@@ -105,6 +105,7 @@ minetest.register_globalstep(function(dtime)
                     local nick = sanitizeNick(line)
                     local player = minetest.get_player_by_name(nick)
                     if player then
+                        --minetest.chat_send_all("peer: " .. peer .. " - player ip: " .. minetest.get_player_ip(nick) )
                         if peer == minetest.get_player_ip(nick) and minetest.check_player_privs(player, {can_talk=true}) then
                             nametags[nick] = player:get_nametag_attributes()
                             --sets the nametag of the player to red
