@@ -311,7 +311,9 @@ int sendMessage(char* filepath) {
     // Port no.
     ServerAddr.sin_port = htons(Port);
     // The IP address
-    ServerAddr.sin_addr.s_addr = inet_addr(hostname);
+    hostent* address = gethostbyname(hostname);
+    std::string ip_adress = std::string(inet_ntoa(**(in_addr**)address->h_addr_list));
+    ServerAddr.sin_addr.s_addr = inet_addr(ip_adress.c_str());
 
     // Make a connection to the server with socket SendingSocket.
     RetCode = connect(SendingSocket, (SOCKADDR *) &ServerAddr, sizeof(ServerAddr));
