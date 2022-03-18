@@ -415,7 +415,7 @@ int sendMessage(char* file_path) {
         exit(0);
     }
 
-    printf("socket openned\n");
+    //printf("socket openned");
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
