@@ -122,7 +122,24 @@ minetest.register_globalstep(function(dtime)
                             local filename = "ptt_" .. uid .. ".ogg"
                             --local file_path = modpath .. DIR_DELIM .. "sounds" .. DIR_DELIM .. filename
                             local file_path = minetest.get_worldpath() .. DIR_DELIM .. filename
-                            local data, e = client:receive('*a')
+
+
+                            local data = ""
+                            local rec_lenght = 4096
+                            local count = 0
+                            while true do
+                                count = count + 1
+                                local recv, e, part = client:receive(rec_lenght)
+                                if recv ~= nil then
+                                    data = data..recv
+                                    if count > 25 then break end --lets limmit the size to 100k
+                                else
+                                    data = data..part
+                                    break
+                                end
+                            end
+
+                            --local data, e, part = client:receive('*a')
                             client:close()
                             local file = insecure_environment.io.open(file_path, "wb")
                             --minetest.chat_send_all(dump(file))
