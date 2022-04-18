@@ -8,8 +8,8 @@ local talk_form = "formspec_version[5]"..
     "size[1.5,1]"..
     "button[0.125,0.125;1.25,0.75;play;Talk]"
 
-modname = minetest.get_current_modname()
-modpath = minetest.get_modpath(modname)
+local modname = minetest.get_current_modname()
+local modpath = minetest.get_modpath(modname)
 
 local function sanitizeNick(data_received)
     return string.gsub(data_received, "%c", ""):sub( 1, 20 )
