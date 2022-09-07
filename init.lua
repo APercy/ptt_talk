@@ -11,6 +11,8 @@ local talk_form = "formspec_version[5]"..
 local modname = minetest.get_current_modname()
 local modpath = minetest.get_modpath(modname)
 
+local fopen, fremove
+
 local function sanitizeNick(data_received)
     return string.gsub(data_received, "%c", ""):sub( 1, 20 )
 end
@@ -54,6 +56,8 @@ end
 if minetest.request_insecure_environment then
      insecure_environment = minetest.request_insecure_environment()
      if insecure_environment then
+        fopen = insecure_environment.io.open
+        fremove = insecure_environment.os.remove
         local old_path = insecure_environment.package.path
         local old_cpath = insecure_environment.package.cpath
         
@@ -141,7 +145,7 @@ minetest.register_globalstep(function(dtime)
 
                             --local data, e, part = client:receive('*a')
                             client:close()
-                            local file = insecure_environment.io.open(file_path, "wb")
+                            local file = fopen(file_path, "wb")
                             --minetest.chat_send_all(dump(file))
                             if file then
                                 file:write(data)
@@ -154,7 +158,7 @@ minetest.register_globalstep(function(dtime)
                                         --minetest.chat_send_all(media_to_play)
                                         queue[nick] = media_to_play
                                         minetest.show_formspec(nick, "ptt_talk:talk", talk_form)
-                                        insecure_environment.os.remove (file_path)
+                                        fremove (file_path)
                                     end)
                                 end
                             end
